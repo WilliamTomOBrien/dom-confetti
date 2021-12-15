@@ -1,5 +1,8 @@
 const defaultColors = ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"];
 
+const onlyConfettiOnScreen = true;
+const windowBufferPercentage = 0.025;
+
 function createElements(root, elementCount, colors, width, height) {
   return Array.from({ length: elementCount }).map((_, index) => {
     const element = document.createElement("div");
@@ -59,6 +62,19 @@ function updateFetti(fetti, progress, dragFriction, decay) {
   /* eslint-enable */
 }
 
+const isElementOnscreen = function(el) {
+  var rect = el.getBoundingClientRect();
+  const heightBuffer = window.innerHeight * windowBufferPercentage;
+  const widthBuffer = window.innerWidth * windowBufferPercentage;
+
+  return !(
+           (rect.x + rect.width) < widthBuffer
+             || (rect.y + rect.height) < heightBuffer
+             || (rect.x > window.innerWidth - widthBuffer
+             || rect.y > window.innerHeight - heightBuffer)
+         );
+}
+
 function animate(root, fettis, dragFriction, decay, duration, stagger) {
   let startTime;
 
@@ -72,6 +88,16 @@ function animate(root, fettis, dragFriction, decay, duration, stagger) {
       });
 
       if (time - startTime < duration) {
+        if(onlyConfettiOnScreen){
+          fettis.forEach(fetti => {
+            if(!isElementOnscreen(fetti.element)){
+              if(fetti.element.parentNode === root) { 
+                root.removeChild(fetti.element);
+              }
+            }
+          });  
+        }
+
         requestAnimationFrame(update);
       } else {
         fettis.forEach(fetti => {
